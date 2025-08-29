@@ -197,12 +197,29 @@ export default function App() {
 
   // Handle paddle movement with buttons
   const handlePaddleMove = (direction: 'up' | 'down', isPressed: boolean) => {
+    // Update button state
     if (direction === 'up') {
       setButtonState((prev) => ({ ...prev, up: isPressed }));
       buttonStateRef.current.up = isPressed;
     } else {
       setButtonState((prev) => ({ ...prev, down: isPressed }));
       buttonStateRef.current.down = isPressed;
+    }
+    
+    // Directly move paddle on press/release in addition to the animation loop
+    const player = roomRef.current?.state.players.get(roomRef.current.sessionId);
+    if (player && roomRef.current && isPressed) {
+      const moveSpeed = 25;
+      let newY = player.y;
+      
+      if (direction === 'up') {
+        newY = Math.max(0, player.y - moveSpeed);
+      } else {
+        newY = Math.min(GAME_HEIGHT - PADDLE_HEIGHT, player.y + moveSpeed);
+      }
+      
+      // Send move command directly
+      roomRef.current.send('move', { y: newY });
     }
   };
 
@@ -418,7 +435,7 @@ export default function App() {
       if (joystickStateRef.current.active && roomRef.current) {
         const player = roomRef.current.state.players.get(roomRef.current.sessionId);
         if (player) {
-          const newY = player.y - joystickStateRef.current.vector.y * 10; // Adjust the multiplier for sensitivity
+          const newY = player.y - joystickStateRef.current.vector.y * 10 * SCALE_FACTOR; // Adjust the multiplier for sensitivity
 
           // Clamp the paddle's position to stay within the game bounds
           const clampedY = Math.max(0, Math.min(GAME_HEIGHT - PADDLE_HEIGHT, newY));
@@ -510,8 +527,57 @@ export default function App() {
           />
         </div>
 
-        {/* Game state message container - always visible to prevent layout shifts */}
-        <div className='game-state-container'>
+        {/* Control buttons - replacing joystick */}
+        <div className='control-buttons-column'>
+          <button
+            className='control-button up-button'
+            onMouseDown={() => handlePaddleMove('up', true)}
+            onMouseUp={() => handlePaddleMove('up', false)}
+            onMouseLeave={() => handlePaddleMove('up', false)}
+            onTouchStart={() => handlePaddleMove('up', true)}
+            onTouchEnd={() => handlePaddleMove('up', false)}
+            onClick={() => {
+              // Move paddle a significant distance on click for webview
+              const player = roomRef.current?.state.players.get(roomRef.current?.sessionId);
+              if (player && roomRef.current) {
+                const moveSpeed = 40;
+                const newY = Math.max(0, player.y - moveSpeed);
+                roomRef.current.send('move', { y: newY });
+              }
+            }}
+            aria-label='Move paddle up'
+          >
+            ▲
+          </button>
+          <div style={{ height: '10px' }} />
+          <button
+            className='control-button down-button'
+            onMouseDown={() => handlePaddleMove('down', true)}
+            onMouseUp={() => handlePaddleMove('down', false)}
+            onMouseLeave={() => handlePaddleMove('down', false)}
+            onTouchStart={() => handlePaddleMove('down', true)}
+            onTouchEnd={() => handlePaddleMove('down', false)}
+            onClick={() => {
+              // Move paddle a significant distance on click for webview
+              const player = roomRef.current?.state.players.get(roomRef.current?.sessionId);
+              if (player && roomRef.current) {
+                const moveSpeed = 40;
+                const newY = Math.min(GAME_HEIGHT - PADDLE_HEIGHT, player.y + moveSpeed);
+                roomRef.current.send('move', { y: newY });
+              }
+            }}
+            aria-label='Move paddle down'
+          >
+            ▼
+          </button>
+        </div>
+
+        <div className='controls-hint'>
+          <p>Controls: Arrow Keys/WASD or use the buttons</p>
+        </div>
+
+        {/* Game state message container - moved outside controls-hint */}
+        <div className='game-state-container' style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 5 }}>
           {gameState !== 'playing' && gameState !== 'game_over' && !stateMessage.includes('wins') ? (
             <div className='game-state-message'>
               <div className='state-message'>{stateMessage}</div>
@@ -524,9 +590,9 @@ export default function App() {
           )}
         </div>
 
-        {/* Game over UI - outside of canvas */}
+        {/* Game over UI - moved outside controls-hint */}
         {(gameState === 'game_over' || stateMessage.includes('wins')) && (
-          <div className='game-over-message-container'>
+          <div className='game-over-message-container' style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
             <div className='game-over-message'>Game Over!</div>
             <div className='game-over-subtext'>{stateMessage}</div>
             <button
@@ -542,36 +608,6 @@ export default function App() {
             </button>
           </div>
         )}
-
-        {/* Control buttons - replacing joystick */}
-        <div className='control-buttons'>
-          <button
-            className='control-button up-button'
-            onMouseDown={() => handlePaddleMove('up', true)}
-            onMouseUp={() => handlePaddleMove('up', false)}
-            onMouseLeave={() => handlePaddleMove('up', false)}
-            onTouchStart={() => handlePaddleMove('up', true)}
-            onTouchEnd={() => handlePaddleMove('up', false)}
-            aria-label='Move paddle up'
-          >
-            ▲
-          </button>
-          <button
-            className='control-button down-button'
-            onMouseDown={() => handlePaddleMove('down', true)}
-            onMouseUp={() => handlePaddleMove('down', false)}
-            onMouseLeave={() => handlePaddleMove('down', false)}
-            onTouchStart={() => handlePaddleMove('down', true)}
-            onTouchEnd={() => handlePaddleMove('down', false)}
-            aria-label='Move paddle down'
-          >
-            ▼
-          </button>
-        </div>
-
-        <div className='controls-hint'>
-          <p>Controls: Arrow Keys/WASD or use the buttons</p>
-        </div>
       </div>
     </div>
   );

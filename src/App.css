@@ -192,6 +192,14 @@ body {
 }
 
 .game-state-container {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  pointer-events: none;
+  width: 80%;
+  text-align: center;
   height: 100px;
   margin-top: 15px;
   margin-bottom: 15px;
@@ -202,7 +210,6 @@ body {
   position: relative;
 }
 
-/* Game state message outside of canvas */
 .game-state-message {
   padding: 15px;
   background-color: rgba(30, 30, 50, 0.8);
@@ -238,8 +245,12 @@ body {
   text-align: center;
 }
 
-/* Game over message outside of canvas */
 .game-over-message-container {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
   margin-bottom: 15px;
   padding: 20px;
   background-color: rgba(0, 0, 0, 0.8);
@@ -265,6 +276,10 @@ body {
 }
 
 .restart-button {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 11;
+  position: relative;
   margin-top: 20px;
   padding: 12px 24px;
   font-size: 1.1rem;
@@ -364,6 +379,33 @@ body {
   margin: 20px 0;
 }
 
+.control-buttons-column {
+  position: relative;
+  z-index: 20 !important; /* Higher z-index than game state messages */
+  pointer-events: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  margin: 20px auto;
+  width: 100%;
+  max-width: 150px;
+}
+
+.control-buttons-column .control-button {
+  margin: 0;
+  display: block;
+}
+
+.up-button {
+  margin-bottom: 30px !important;
+}
+
+.down-button {
+  margin-top: 30px !important;
+}
+
 .control-button {
   width: 80px;
   height: 80px;
@@ -378,6 +420,12 @@ body {
   align-items: center;
   transition: all 0.2s ease;
   box-shadow: 0 4px 10px rgba(76, 201, 240, 0.4);
+  /* Improve touchability for mobile/webview */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  position: relative;
+  z-index: 10;
 }
 
 .control-button:active,
@@ -391,14 +439,6 @@ body {
   transform: scale(0.95);
 }
 
-.up-button {
-  margin-bottom: 10px;
-}
-
-.down-button {
-  margin-top: 10px;
-}
-
 .controls-hint {
   margin-top: 1rem;
   padding: 0.5rem;
@@ -409,12 +449,30 @@ body {
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-  .control-buttons {
-    gap: 20px;
+  .game-title {
+    font-size: 1.8rem;
+  }
+  
+  .game-subtitle {
+    font-size: 1rem;
+  }
+  
+  .canvas-container {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 500px;
   }
   
   .control-button {
     width: 70px;
     height: 70px;
+  }
+  
+  .scoreboard {
+    max-width: 500px;
+  }
+  
+  .control-buttons {
+    gap: 20px;
   }
 }
