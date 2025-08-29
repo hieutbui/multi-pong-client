@@ -198,10 +198,10 @@ export default function App() {
   // Handle paddle movement with buttons
   const handlePaddleMove = (direction: 'up' | 'down', isPressed: boolean) => {
     if (direction === 'up') {
-      setButtonState(prev => ({ ...prev, up: isPressed }));
+      setButtonState((prev) => ({ ...prev, up: isPressed }));
       buttonStateRef.current.up = isPressed;
     } else {
-      setButtonState(prev => ({ ...prev, down: isPressed }));
+      setButtonState((prev) => ({ ...prev, down: isPressed }));
       buttonStateRef.current.down = isPressed;
     }
   };
@@ -209,31 +209,31 @@ export default function App() {
   // Effect for continuous button movement
   React.useEffect(() => {
     let animationFrameId: number;
-    
+
     const moveLoop = () => {
       const player = roomRef.current?.state.players.get(roomRef.current.sessionId);
       if (player && roomRef.current) {
         const moveSpeed = 10;
         let newY = player.y;
-        
+
         if (buttonStateRef.current.up) {
           newY = Math.max(0, player.y - moveSpeed);
         }
-        
+
         if (buttonStateRef.current.down) {
           newY = Math.min(GAME_HEIGHT - PADDLE_HEIGHT, player.y + moveSpeed);
         }
-        
+
         if (buttonStateRef.current.up || buttonStateRef.current.down) {
           roomRef.current.send('move', { y: newY });
         }
       }
-      
+
       animationFrameId = requestAnimationFrame(moveLoop);
     };
-    
+
     animationFrameId = requestAnimationFrame(moveLoop);
-    
+
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
@@ -241,7 +241,7 @@ export default function App() {
 
   // Main connection and game logic effect
   React.useEffect(() => {
-    const serverAddress = `ws://${window.location.hostname}:2567`;
+    const serverAddress = `wss://multi-pacman-game.westeurope.cloudapp.azure.com/colyseus`;
     const client = new Client(serverAddress);
     let roomInstance: Room<MyRoomState> | undefined;
     let joystick: any | undefined;
@@ -480,16 +480,18 @@ export default function App() {
       <div className='scoreboard'>
         <div className={`player-info ${Object.keys(scores)[0] === roomRef.current?.sessionId ? 'current-player' : ''}`}>
           <div className='player-label'>
-            Player 1 {Object.keys(scores)[0] === roomRef.current?.sessionId ? <span className="you-indicator">(You)</span> : ''}:
+            Player 1{' '}
+            {Object.keys(scores)[0] === roomRef.current?.sessionId ? <span className='you-indicator'>(You)</span> : ''}:
           </div>
           <div className='player-score'>{Object.values(scores)[0] || 0}</div>
         </div>
-        
+
         <div className='score-spacer'>VS</div>
-        
+
         <div className={`player-info ${Object.keys(scores)[1] === roomRef.current?.sessionId ? 'current-player' : ''}`}>
           <div className='player-label'>
-            Player 2 {Object.keys(scores)[1] === roomRef.current?.sessionId ? <span className="you-indicator">(You)</span> : ''}:
+            Player 2{' '}
+            {Object.keys(scores)[1] === roomRef.current?.sessionId ? <span className='you-indicator'>(You)</span> : ''}:
           </div>
           <div className='player-score'>{Object.values(scores)[1] || 0}</div>
         </div>
@@ -509,26 +511,26 @@ export default function App() {
         </div>
 
         {/* Game state message container - always visible to prevent layout shifts */}
-        <div className="game-state-container">
+        <div className='game-state-container'>
           {gameState !== 'playing' && gameState !== 'game_over' && !stateMessage.includes('wins') ? (
-            <div className="game-state-message">
-              <div className="state-message">{stateMessage}</div>
-              {gameState === 'countdown' && <div className="state-subtext">Get ready!</div>}
+            <div className='game-state-message'>
+              <div className='state-message'>{stateMessage}</div>
+              {gameState === 'countdown' && <div className='state-subtext'>Get ready!</div>}
             </div>
           ) : (
-            <div className="game-state-message hidden">
-              <div className="state-message">&nbsp;</div>
+            <div className='game-state-message hidden'>
+              <div className='state-message'>&nbsp;</div>
             </div>
           )}
         </div>
 
         {/* Game over UI - outside of canvas */}
         {(gameState === 'game_over' || stateMessage.includes('wins')) && (
-          <div className="game-over-message-container">
-            <div className="game-over-message">Game Over!</div>
-            <div className="game-over-subtext">{stateMessage}</div>
+          <div className='game-over-message-container'>
+            <div className='game-over-message'>Game Over!</div>
+            <div className='game-over-subtext'>{stateMessage}</div>
             <button
-              className="restart-button"
+              className='restart-button'
               onClick={() => {
                 console.log('Restart button clicked!');
                 if (roomRef.current) {
@@ -543,25 +545,25 @@ export default function App() {
 
         {/* Control buttons - replacing joystick */}
         <div className='control-buttons'>
-          <button 
+          <button
             className='control-button up-button'
             onMouseDown={() => handlePaddleMove('up', true)}
             onMouseUp={() => handlePaddleMove('up', false)}
             onMouseLeave={() => handlePaddleMove('up', false)}
             onTouchStart={() => handlePaddleMove('up', true)}
             onTouchEnd={() => handlePaddleMove('up', false)}
-            aria-label="Move paddle up"
+            aria-label='Move paddle up'
           >
             ▲
           </button>
-          <button 
+          <button
             className='control-button down-button'
             onMouseDown={() => handlePaddleMove('down', true)}
             onMouseUp={() => handlePaddleMove('down', false)}
             onMouseLeave={() => handlePaddleMove('down', false)}
             onTouchStart={() => handlePaddleMove('down', true)}
             onTouchEnd={() => handlePaddleMove('down', false)}
-            aria-label="Move paddle down"
+            aria-label='Move paddle down'
           >
             ▼
           </button>
