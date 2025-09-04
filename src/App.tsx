@@ -56,6 +56,7 @@ export default function App() {
   const roomRef = useRef<Room<MyRoomState> | null>(null);
   const [message, setMessage] = useState('');
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
   const [playerNo, setPlayerNo] = useState(0);
 
   // Touch position state for paddle control
@@ -66,6 +67,16 @@ export default function App() {
     if (roomRef.current?.connection.isOpen) {
       roomRef.current.send('join');
       setMessage('Waiting for other player...');
+    } else {
+      setMessage('Connection error. Refresh the page and try again.');
+    }
+  };
+
+  // Handle restart game
+  const restartGame = () => {
+    if (roomRef.current?.connection.isOpen) {
+      roomRef.current.send('restart');
+      setMessage('Waiting for other player to restart...');
     } else {
       setMessage('Connection error. Refresh the page and try again.');
     }
@@ -133,15 +144,19 @@ export default function App() {
           if (state.gameState === 'waiting_for_players') {
             setMessage('Waiting for other player...');
             setIsGameStarted(false);
+            setIsGameOver(false);
           } else if (state.gameState === 'starting') {
             setMessage('We are going to start the game...');
             setIsGameStarted(true);
+            setIsGameOver(false);
           } else if (state.gameState === 'playing') {
             setMessage('');
             setIsGameStarted(true);
+            setIsGameOver(false);
             requestAnimationFrame(draw);
           } else if (state.gameState === 'game_over') {
             setIsGameStarted(false);
+            setIsGameOver(true);
             const isWinner = state.stateMessage.includes(roomInstance.sessionId);
             setMessage(isWinner ? 'You Win!' : 'You Lose!');
             
@@ -214,7 +229,17 @@ export default function App() {
     if (ball) {
       ctx.fillStyle = 'white';
       ctx.beginPath();
-      ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
+      
+      // Simple solution: For player 2 (top player), flip the y-coordinate completely
+      // This creates the correct visual effect where the ball appears to move in the opposite direction
+      let displayY = ball.y;
+      
+      if (playerNo === 2) {
+        // For the player at the top, flip the y-coordinate
+        displayY = GAME_HEIGHT - ball.y;
+      }
+      
+      ctx.arc(ball.x, displayY, BALL_RADIUS, 0, Math.PI * 2);
       ctx.fill();
     }
     
@@ -265,9 +290,15 @@ export default function App() {
         
         {message && <p id="message">{message}</p>}
         
-        {!isGameStarted && (
+        {!isGameStarted && !isGameOver && (
           <button id="startBtn" onClick={startGame}>
             START GAME
+          </button>
+        )}
+
+        {isGameOver && (
+          <button id="restartBtn" onClick={restartGame}>
+            RESTART GAME
           </button>
         )}
       </div>
