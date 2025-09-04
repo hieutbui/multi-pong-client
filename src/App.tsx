@@ -106,7 +106,7 @@ export default function App() {
 
   // Connection and game logic
   useEffect(() => {
-    const serverAddress = `ws://localhost:2567`;
+    const serverAddress = `wss://multi-pacman-game.westeurope.cloudapp.azure.com/colyseus`;
     const client = new Client(serverAddress);
     
     const connect = async () => {
