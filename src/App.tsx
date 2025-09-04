@@ -136,8 +136,11 @@ export default function App() {
         
         // Game state and player management
         roomInstance.onMessage('playerNo', (no) => {
-          console.log('Player number:', no);
-          setPlayerNo(no);
+          console.log('Received player number:', no);
+          // Ensure playerNo is either 1 or 2
+          const playerNumber = no === 0 ? 1 : no;
+          console.log('Setting player number to:', playerNumber);
+          setPlayerNo(playerNumber);
         });
         
         roomInstance.onStateChange((state) => {
@@ -230,17 +233,58 @@ export default function App() {
       ctx.fillStyle = 'white';
       ctx.beginPath();
       
-      // Simple solution: For player 2 (top player), flip the y-coordinate completely
-      // This creates the correct visual effect where the ball appears to move in the opposite direction
+      // Adjust perspective for player 2 (top player)
+      // Note: playerNo is 1-indexed (1 for bottom player, 2 for top player)
+      let displayX = ball.x;
       let displayY = ball.y;
       
       if (playerNo === 2) {
         // For the player at the top, flip the y-coordinate
         displayY = GAME_HEIGHT - ball.y;
+        
+        // Add slight client-side prediction using velocity for smoother animation
+        // Note: We also need to invert the velocity direction for player 2
+        if (isGameStarted) {
+          // Use a small prediction factor (0.1 means predict 10% of a frame ahead)
+          // For top player, we need to negate the y-velocity for correct visual direction
+          displayY -= ball.vy * 0.1;
+        }
+      } else {
+        // For player 1 (bottom), still use prediction for smoothness
+        if (isGameStarted) {
+          displayY += ball.vy * 0.1;
+        }
       }
       
-      ctx.arc(ball.x, displayY, BALL_RADIUS, 0, Math.PI * 2);
+      ctx.arc(displayX, displayY, BALL_RADIUS, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Optional: Draw a small indicator showing the ball's direction
+      if (isGameStarted) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath();
+        
+        // Calculate end point of direction indicator
+        const dirLength = 10; // Length of direction indicator
+        let dirX = ball.vx;
+        let dirY = ball.vy;
+        
+        // Flip direction indicator for player 2
+        if (playerNo === 2) {
+          dirY = -dirY;
+        }
+        
+        // Normalize and scale
+        const magnitude = Math.sqrt(dirX * dirX + dirY * dirY);
+        if (magnitude > 0) {
+          dirX = (dirX / magnitude) * dirLength;
+          dirY = (dirY / magnitude) * dirLength;
+        }
+        
+        ctx.moveTo(displayX, displayY);
+        ctx.lineTo(displayX + dirX, displayY + dirY);
+        ctx.stroke();
+      }
     }
     
     // Draw score
